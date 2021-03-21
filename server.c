@@ -32,12 +32,6 @@
 
 #define MAX_THREADS 1000000L
 
-struct box
-{
-	int height;
-	int length;
-	int width;
-};
 extern int errno;
 int token = 1700; 
 int descri[1096];
@@ -101,7 +95,7 @@ int main(int argc, char *argv[])
 
 		printf("waiting for connection ...\n");
     	int clfd = accept(host_fd, &client_sockaddr, &client_sockaddr_len);
-       	if (clfd < 0) {
+       	if (clfd < 0||clfd >1096) {
 			perror("accept error");
 		}
 		printf("accepted connection, socket [%d]\n", clfd);
@@ -117,7 +111,7 @@ int main(int argc, char *argv[])
 		}
 
 
-		
+			
 		
 	} 
 }
@@ -134,22 +128,45 @@ void * thread_do(void *fd)
 	
 	while(1)
 	{
-		char name[30];
-		memset(name,'\0',30);
-		recv(clfd,name,30,0);
+		char name[60];
+		memset(name,'\0',60);
+		if (recv(clfd,name,60,0)<=0)
+		{
+		int j ;
+		for (j =0; j<size; j++)
+		{
+			if (descri[j]==clfd)
+			{
+				descri[j]=0;
+			}
+		}
+			
+			close(clfd);
+			printf("Unable  to receive message\n");
+			int a=2;
+			pthread_exit(&a);
+		}
 	
+		
 		int i ;
 		for (i=0;i<size;i++)
 		{
 			
-			send(descri[i],&clfd,4,0);	
-			printf("%d\n",i);	
-			if (send(descri[i],name,30,0)==30)
+		if ( descri[i]!=0)
+		
+		{
+			if(send(descri[i],&clfd,4,0)<0)
 			{
-				printf("send 30");
+				close(clfd);
+				printf("Unable to send int\n");
+			}
+			if (send(descri[i],name,60,0)<0)
+			{
+				close(descri[clfd]);
+				printf("Unable to send message\n");
 			}
 		}
-		//printf("loop down");
+		}
 	
 		}
 
