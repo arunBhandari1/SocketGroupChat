@@ -64,14 +64,20 @@ int main(int argc, char *argv[]) {
          }
  	while(1)
         {
-                char sim[30];
-                memset(sim,'\0',30);
-                fgets(sim,30,stdin);
+                char sim[60];
+                memset(sim,'\0',60);
+                if (fgets(sim,60,stdin)==NULL)
+		{
+			int a=2;
+	//		pthread_exit(&a);
+		}
 		sim[strlen(sim)-1]= '\0';
-		if (send(sockfd,sim,30,0)!=30)
+		if (send(sockfd,sim,60,0)<0)
                 {
-                      print_error("Error\n");
-                }
+			close(sockfd);
+               		print_error("Error sending string");
+			
+		 }
 }
 }
 
@@ -88,13 +94,24 @@ void * msg_print(void *fd)
 		
 			int clfd;
 			memset(&clfd,'\0',4);
-			recv(sockfd,&clfd,4,0);
-		
-			char name[30];
-			memset(name,'\0',30);
-			if (recv(sockfd,name,30,0)!=30)
+			if(recv(sockfd,&clfd,4,0)<0)
 			{
-			//	print_error("Error\n");				
+				close(sockfd);
+				print_error("Error receiveing");
+				
+			}
+			if (clfd==0)
+			{
+				close(sockfd);
+				exit(1);
+			}	
+			char name[60];
+			memset(name,'\0',60);
+			if (recv(sockfd,name,60,0)<0)
+			{
+				close(sockfd);
+				print_error("Error");
+								
 			}
 			printf("User %d says: %s\n",clfd, name);
 		}
